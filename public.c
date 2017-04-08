@@ -63,6 +63,14 @@ int Accept(int listenFd, struct sockaddr *addr, int *clientLen){
     return connectFd;
 }
 
+int Open(char *filename, int flags, mode_t mode){
+    int fd;
+    if((fd = open(filename, flags, mode)) < 0){
+        error("Open file error!");
+    }
+    return fd;
+}
+
 void Close(int connectFd){
     if(close(connectFd) < 0){
         error("Close error!");
@@ -81,27 +89,34 @@ void InitReadBuf(rio_t *rp, int fd){
 
 size_t rioRead(rio_t *rp, char *buf, size_t n){
     int cnt;
+    printf("2-2-2-1\n");
     while(rp->rio_cnt <= 0){
-        rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf))
+        rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
+        printf("2-2-2-2\n");
         if(rp->rio_cnt < 0){
-            if(errno == EINTR) //被中断
+            if(errno == EINTR){ //被中断
+                printf("2-2-2-3\n");
                 continue;
+            }
             else
                 return -1;
         }
-        else if(rp->rio_cnt = 0){ //EOF
+        else if(rp->rio_cnt == 0){ //EOF
+            printf("2-2-2-4\n");
             return 0;
         }
         else{
+            printf("2-2-2-5\n");
+            printf("%d\n", rp->rio_cnt);
             rp->rio_bufptr = rp->rio_buf; //更新缓冲区指针
         }
     }
-    
+    printf("2-2-2-6\n");
     cnt = n;
     if(cnt < rp->rio_cnt){
         cnt = rp->rio_cnt;
     }
-    memcpy(buf, rp->rio_buf, cnt);
+    memcpy(buf, rp->rio_bufptr, cnt);
     rp->rio_cnt -= cnt;
     rp->rio_bufptr += cnt;
     
@@ -117,7 +132,7 @@ size_t RioRead(rio_t *rp, char *buf, size_t n){
     return cnt;
 }
 
-void rioReadN(rio_t *rp, char *buf, size_t n){
+size_t rioReadN(rio_t *rp, char *buf, size_t n){
     char *bufp = buf;
     size_t nLeft = n;
     size_t nRead;
@@ -138,11 +153,20 @@ void rioReadN(rio_t *rp, char *buf, size_t n){
     return (n - nLeft);
 }
 
+size_t RioReadN(rio_t *rp, char *buf, size_t n){
+    int rc;
+    if((rc = rioReadN(rp, buf, n)) < 0){
+        error("RioReadN error!");
+    }
+    return rc;
+}
+
 size_t rioReadLine(rio_t *rp, char *buf, size_t maxLen){
     int n, read;
     char c, *bufptr = buf;
-    
+    printf("2-2-1\n");
     for(n = 1; n < maxLen; n++){
+        printf("2-2-2\n");
         if((read = rioRead(rp, &c, 1)) == 1){
             *(bufptr++) = c;
             if(c = '\n')
@@ -159,7 +183,7 @@ size_t rioReadLine(rio_t *rp, char *buf, size_t maxLen){
         }
     }
     *bufptr = 0; //以0结尾
-    
+    printf("2-2-3\n");
     return n;
 }
 
@@ -167,18 +191,19 @@ size_t RioReadLine(rio_t *rp, char *buf, size_t maxLen){
     int rc;
     if((rc = rioReadLine(rp, buf, maxLen)) < 0){
         error("RioReadLine error!");
+        printf("RioReadLine error!\n");
     }
     
     return rc;
 }
 
-size_t rioWriteN(rio_t *rp, const char *buf, size_t n){
-    char *bufp = buf;
+size_t rioWriteN(int fd, const char *buf, size_t n){
+    const char *bufp = buf;
     size_t nLeft = n;
     size_t nWrite;
     
     while(nLeft > 0){
-        if((nWrite = write(rp->rio_fd, bufp, nLeft)) <= 0){
+        if((nWrite = write(fd, bufp, nLeft)) <= 0){
             if(errno == EINTR) //被中断
                 nWrite = 0;
             else
@@ -189,4 +214,54 @@ size_t rioWriteN(rio_t *rp, const char *buf, size_t n){
     }
     
     return n;
+}
+
+size_t RioWriteN(int fd, const char *buf, size_t n){
+    int rc;
+    if((rc = rioWriteN(fd, buf, n)) < 0){
+        error("RioWriteN error!");
+    }
+    return rc;
+}
+
+void *Mmap(void *start, size_t length, int port, int flags, int fd, off_t offset){
+    void *ptr;
+    if((ptr = mmap(start, length, port, flags, fd, offset)) == (void *)-1){
+        error("Mmap error!");
+    }
+    return ptr;
+}
+
+void Munmap(void *start, size_t length){
+    if(munmap(start, length) < 0){
+        error("Munmap error!");
+    }
+}
+
+int Fork(){
+    int pid;
+    if((pid = fork()) < 0){
+        error("Fork error!");
+    }
+    return pid;
+}
+
+void Execve(const char *filename, const char *argv[], const char *envp[]){
+    if(execve(filename, argv, envp) < 0){
+        error("Execve error!");
+    }
+}
+
+
+void Dup2(int oldFd, int newFd){
+    if(dup2(oldFd, newFd) < 0){
+        error("Dup2 error!");
+    }
+}
+
+void Wait(int *status){
+    if(wait(status) < 0){
+        error("Wait error!");
+    }
+    
 }
