@@ -37,8 +37,8 @@ void doit(int connectFd){
     requestLine rl;
     printf("2-1\n");
     readRequestLine(&rio, &rl);
-
-    printf("%s\n", rl.method);    
+    printf("%s %s %s\n", rl.method, rl.uri, rl.version);    
+    
     if(strcmp(rl.method, "GET")){
         clientError(connectFd, rl.method, "501", "Not Implemented", 
         "Mini-WebServer does not implement this method!");
@@ -53,11 +53,11 @@ void doit(int connectFd){
     /*解析URI*/
     printf("4\n");
     int isStatic;  //用于区分动静态服务
-    char *filename, *cgiArgs;
+    char filename[MAXLINE], cgiArgs[MAXLINE];
     struct stat sbuf;
     isStatic = parseUri(rl.uri, filename, cgiArgs);
     
-    printf("4-1 %s %s %d\n", filename, cgiArgs, isStatic);
+    printf("%s %s %d\n", filename, cgiArgs, isStatic);
     if(stat(filename, &sbuf) < 0){ //没有找到文件
         clientError(connectFd, rl.method, "404", "Not Found",
         "Mini-WebServer couldn't found this file");
@@ -93,11 +93,8 @@ void doit(int connectFd){
 
 void readRequestLine(rio_t *rp, requestLine *rlp){
     char buf[MAXLINE];
-    printf("2-2\n");
     RioReadLine(rp, buf, MAXLINE);
-    printf("2-3\n");
     sscanf(buf, "%s %s %s", rlp->method, rlp->uri, rlp->version);
-    printf("2-4\n");
 }
 
 
@@ -108,18 +105,22 @@ requestHdr *readRequestHdr(rio_t *rp){
     
     /*创建第一个请求报头结点(如果有的话)*/
     RioReadLine(rp, buf, MAXHDR);
-    if(!strcmp(buf, "\r\n")){
+    printf("%s\n", buf);
+    if(strcmp(buf, "\r\n")){
         requestHdr *tmp = (requestHdr*)malloc(sizeof(requestHdr));
         sscanf(buf, "%s %s", tmp->headerName, tmp->headerData);
         rhp = rhq = tmp;        
     }
     
     while(strcmp(buf, "\r\n")){
+        RioReadLine(rp, buf, MAXHDR);
+        printf("%s\n", buf);
         requestHdr *tmp = (requestHdr*)malloc(sizeof(requestHdr));
         sscanf(buf, "%s %s", tmp->headerName, tmp->headerData);
         rhp->next = tmp;
         rhp = tmp;
     }
+
     return rhp;
 }
 

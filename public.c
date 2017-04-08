@@ -89,33 +89,22 @@ void InitReadBuf(rio_t *rp, int fd){
 
 size_t rioRead(rio_t *rp, char *buf, size_t n){
     int cnt;
-    printf("2-2-2-1\n");
     while(rp->rio_cnt <= 0){
         rp->rio_cnt = read(rp->rio_fd, rp->rio_buf, sizeof(rp->rio_buf));
-        printf("2-2-2-2\n");
         if(rp->rio_cnt < 0){
-            if(errno == EINTR){ //被中断
-                printf("2-2-2-3\n");
+            if(errno == EINTR) //被中断
                 continue;
-            }
             else
                 return -1;
         }
-        else if(rp->rio_cnt == 0){ //EOF
-            printf("2-2-2-4\n");
+        else if(rp->rio_cnt == 0) //EOF
             return 0;
-        }
-        else{
-            printf("2-2-2-5\n");
-            printf("%d\n", rp->rio_cnt);
+        else
             rp->rio_bufptr = rp->rio_buf; //更新缓冲区指针
-        }
     }
-    printf("2-2-2-6\n");
     cnt = n;
-    if(cnt < rp->rio_cnt){
+    if(cnt > rp->rio_cnt)
         cnt = rp->rio_cnt;
-    }
     memcpy(buf, rp->rio_bufptr, cnt);
     rp->rio_cnt -= cnt;
     rp->rio_bufptr += cnt;
@@ -164,12 +153,10 @@ size_t RioReadN(rio_t *rp, char *buf, size_t n){
 size_t rioReadLine(rio_t *rp, char *buf, size_t maxLen){
     int n, read;
     char c, *bufptr = buf;
-    printf("2-2-1\n");
     for(n = 1; n < maxLen; n++){
-        printf("2-2-2\n");
         if((read = rioRead(rp, &c, 1)) == 1){
             *(bufptr++) = c;
-            if(c = '\n')
+            if(c == '\n')
                 break;
         }
         else if(read == 0){
@@ -178,12 +165,10 @@ size_t rioReadLine(rio_t *rp, char *buf, size_t maxLen){
             else
                 break;
         }
-        else{
+        else
             return -1;
-        }
     }
     *bufptr = 0; //以0结尾
-    printf("2-2-3\n");
     return n;
 }
 
