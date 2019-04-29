@@ -18,12 +18,17 @@ void child_init(process_t *pChilds, int childNum){
 }
 
 int child_handle(int fd){
-	int newfd;
-	while(1){
-		recv_fd(fd, &newfd);
-	    tran_file(newfd);
-		close(newfd);
-		Write(fd, "N", 1); //通知父进程我非忙碌了
+    int newfd, exit_flag;
+    while(1){
+        recv_fd(fd, &newfd, &exit_flag);
+        if(exit_flag){
+	        tran_file(newfd);
+            close(newfd);
+        }
+        else{
+            exit(0);
+        }
+        Write(fd, "N", 1); //通知父进程我非忙碌了
 	}
 	return 0;
 }

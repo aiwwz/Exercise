@@ -1,14 +1,13 @@
 #include "pool.h"
 
-void send_fd(int sfd,int fd){
+void send_fd(int sfd,int fd, int exit_flag){
 	struct msghdr msg;
 	memset(&msg,0,sizeof(msg));
 	struct iovec iov[2];
-	char buf1[10];
-	char buf2[10];
-	iov[0].iov_base=buf1;
-	iov[0].iov_len=5;
-	iov[1].iov_base=buf2;
+	char buf[6] = "hello";
+	iov[0].iov_base=&exit_flag;
+	iov[0].iov_len=4;
+	iov[1].iov_base=buf;
 	iov[1].iov_len=5;
 	msg.msg_iov=iov;
 	msg.msg_iovlen=2;
@@ -24,15 +23,14 @@ void send_fd(int sfd,int fd){
 	Sendmsg(sfd,&msg,0);
 }
 
-void recv_fd(int sfd,int *fd){
+void recv_fd(int sfd,int *fd, int *exit_flag){
 	struct msghdr msg;
 	memset(&msg,0,sizeof(msg));
 	struct iovec iov[2];
-	char buf1[10];
-	char buf2[10];
-	iov[0].iov_base=buf1;
-	iov[0].iov_len=5;
-	iov[1].iov_base=buf2;
+	char buf[6];
+	iov[0].iov_base=exit_flag;
+	iov[0].iov_len=4;
+	iov[1].iov_base=buf;
 	iov[1].iov_len=5;
 	msg.msg_iov=iov;
 	msg.msg_iovlen=2;

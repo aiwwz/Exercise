@@ -51,8 +51,8 @@ typedef struct{
 
 void child_init(process_t*, int);
 int child_handle(int);
-void send_fd(int sfd, int fd);
-void recv_fd(int sfd, int *fd);
+void send_fd(int sfd, int fd, int exit_flag);
+void recv_fd(int sfd, int *fd, int *exit_flag);
 void tran_file(int newfd);
 
 /* 套接字接口包装函数 */
