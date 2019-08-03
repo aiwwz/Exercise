@@ -98,14 +98,15 @@ public:
         sort(m_edges.begin(), m_edges.end(), cmp);
     }
 
-    vector<Vertex> m_vertexs;
-    vector<Edge> m_edges;
+    vector<Vertex> m_vertexs; //顶点集
+    vector<Edge> m_edges;     //边集
 };
 
+//查找顶点v所在的连通分量
 int FindRoot(int parent[], int v) {
     int s;
     for(s = v; parent[s] >= 0; s = parent[s]);
-    while(s != v) {
+    while(s != v) { //便于下次查找
         int tmp = parent[v];
         parent[v] = s;
         v = tmp;
@@ -126,11 +127,11 @@ void Kruskal(Graph &G) {
     for(size_t num = 0, i = 0; i < G.m_edges.size(); ++i) {
         vex1 = FindRoot(parent, G.m_edges[i].u);
         vex2 = FindRoot(parent, G.m_edges[i].v);
-        if(vex1 != vex2) {
-            cout << "<" << G.m_vertexs[G.m_edges[i].u].country << " --> " << G.m_vertexs[G.m_edges[i].v].country << "> : " << G.m_edges[i].weight << endl;
+        if(vex1 != vex2) { //若不在同一个连通分量中
+            cout << "<" << G.m_vertexs[G.m_edges[i].u].country << "-" << G.m_edges[i].u << " --> " << G.m_vertexs[G.m_edges[i].v].country << "-" << G.m_edges[i].v  << "> : " << G.m_edges[i].weight << endl;
             mstSum += G.m_edges[i].weight;
-            parent[vex2] = vex1;
-            if(++num == G.m_vertexs.size() - 1) {
+            parent[vex2] = vex1; //将vex2代表的连通分量加入到vex1代表的连通分量中
+            if(++num == G.m_vertexs.size() - 1) { //处理N-1条边即结束, 不做无用功
                 cout << "最小生成树权值之和为: " << mstSum << endl;
                 break;
             }
